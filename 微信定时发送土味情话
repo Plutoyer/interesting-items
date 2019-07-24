@@ -1,0 +1,66 @@
+import requests
+from wxpy import *
+from bs4 import BeautifulSoup
+import random
+from datetime import date, time, datetime, timedelta
+
+# 微信网页登陆
+bot = Bot()
+
+
+def get_msg(page):
+    url = 'http://www.ainicr.cn/a/' + page.title() + '.html'
+    h = requests.get(url)
+    html = h.text
+    news_bf = BeautifulSoup(html, "html.parser")
+    msg = news_bf.find('div', class_='article_body')
+    news = msg.text
+    news = news.replace(" ", '').replace("\r", '').replace("\n", '')
+    news = news.split("标签：")[0]
+    # print(msg)
+    # print(news)
+    return news
+
+
+# 给朋友发送消息
+def send_msg():
+    try:
+        # 添加朋友微信昵称
+        friend = bot.friends().search('桔子')[0]
+
+        friend.send(get_msg(str(random.randint(100, 999))))
+
+    except:
+        pass
+
+
+def runTask(func, day=0, hour=0, min=0, second=0):
+    # Init time
+    now = datetime.now()
+    strnow = now.strftime('%Y-%m-%d %H:%M:%S')
+    print("now:", strnow)
+    # First next run time
+    period = timedelta(days=day, hours=hour, minutes=min, seconds=second)
+    next_time = now + period
+    strnext_time = next_time.strftime('%Y-%m-%d %H:%M:%S')
+    print("next run:", strnext_time)
+    while True:
+        # Get system current time
+        iter_now = datetime.now()
+        iter_now_time = iter_now.strftime('%Y-%m-%d %H:%M:%S')
+        if str(iter_now_time) == str(strnext_time):
+            # Get every start work time
+            print("start work: %s" % iter_now_time)
+            # Call task func
+            func()
+            print("task done.")
+            # Get next iteration time
+            iter_time = iter_now + period
+            strnext_time = iter_time.strftime('%Y-%m-%d %H:%M:%S')
+            print("next_iter: %s" % strnext_time)
+            # Continue next iteration
+            continue
+
+
+if __name__ == '__main__':
+    runTask(send_msg, min=0.5)  # 时间间隔
